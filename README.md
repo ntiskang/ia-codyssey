@@ -27,8 +27,10 @@ Major  Minor  Build  Revision
 
 PS C:\Users\User> $env:WT_SESSION
 9b0e8c52-6a75-470e-bd05-fae6d4404f84
+
 PS C:\Users\User> docker --version
 Docker version 29.9.2, build a82e528
+
 PS C:\Users\User> docker version
 Client:
  Version:           29.9.2
@@ -57,11 +59,12 @@ Server: Docker Desktop 4.97.0 (244584)
  docker-init:
   Version:          0.19.0
   GitCommit:        de40ad0
+
 PS C:\Users\User> docker compose version
 Docker Compose version v5.6.1
+
 PS C:\Users\User> git --version
 git version 2.56.0.windows.4
-PS C:\Users\User>
 
 3. 수행항목 체크리스트
    - 터미널:
@@ -232,10 +235,10 @@ Options:
                        "2013-01-02T13:23:37Z") or relative (e.g. "42m"
                        for 42 minutes)
    - Dockerfile:
-   - 포트:
+   - 포트: 포트 매핑 docker run -d -p 8080:5000 flask-app 호스트 컴퓨터 포트: Docker 내부 포트, 실행할 Docker이미지
    - 볼륨:
    - Git/GitHUb:
-  
+ 
 4. 검증방법(어떤 명령으로 무엇을 확인했는가) + 결과 위치 링크
 5. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
    
