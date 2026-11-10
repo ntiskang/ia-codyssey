@@ -10,7 +10,6 @@ Github와 Codyssey를 연동해기 위해 만들어진 Repository
    - OS/Shell/Terminal:
    - S C:\Users\User> Get-ComputerInfo | Select-Object
 
-
 WindowsBuildLabEx                                       : 26100.1.amd64fre.ge_release.240331-1435
 WindowsCurrentVersion                                   : 6.3
 WindowsEditionId                                        : Professional
@@ -63,12 +62,28 @@ Server: Docker Desktop 4.97.0 (244584)
 PS C:\Users\User> docker compose version
 Docker Compose version v5.6.1
 
-PS C:\Users\User> git --version
-git version 2.56.0.windows.4
+Git버전 확인
+   PS> C:\Users\User> git --version
+      git version 2.56.0.windows.4
 
-3. 수행항목 체크리스트
-   - 터미널:
-   - 권한:
+Docker버전 확인
+   PS> docker --version
+     Docker version 29.9.2, build a82e528
+
+Docker정보 확인 
+     PS> docker info
+         Client:
+         Version:    29.9.2
+         Context:    desktop-linux
+Images확인
+      PS> docker images
+     IMAGE                  ID             DISK USAGE   CONTENT SIZE   EXTRA
+     nginx:latest           600f7cd45e27        243MB         66.8MB    U
+
+미실행 컨테이너 포함 컨테이너 확인
+     PS>docker ps -a
+
+3. 권한 변경 실습
      r / w / x의 의미
      r	Read	4	파일 내용을 읽을 수 있음
      w	Write	2	파일 내용을 수정할 수 있음
@@ -81,29 +96,15 @@ git version 2.56.0.windows.4
        - Owner (소유자): 파일을 소유한 사용자
        - Group (그룹): 파일이 속한 그룹의 사용자
        - Others (기타): 그 외의 모든 사용자
-   - Docker:
-     PS C:\Windows\System32> docker --version
-Docker version 29.9.2, build a82e528
-PS C:\Windows\System32> docker info
-Client:
- Version:    29.9.2
- Context:    desktop-linux
-
-PS C:\Windows\System32> docker images
-                                                                                                          i Info →   U  In Use
-IMAGE                  ID             DISK USAGE   CONTENT SIZE   EXTRA
-nginx:latest           600f7cd45e27        243MB         66.8MB    U
-
-PS C:\Windows\System32> docker ps -a
-
-디렉토리 생성 및 웹실행 파일(python flask) 만들기
+ 
+4. 디렉토리 생성 및 웹실행 파일(python flask) 만들기
    mkdir od-mission1
    cd od-mission1
    mkdir app
    mkdir evidence
    notepad app\app.py
 
-파이선 웹실행 파일 내용
+5. 파이선 웹실행 파일 내용
 
    from flask import Flask
    app = Flask(__name__)
@@ -117,7 +118,7 @@ PS C:\Windows\System32> docker ps -a
   if __name__ == "__main__":
      app.run(host="0.0.0.0", port=5000)
 
-Dockerfile 생성
+6. Dockerfile 생성
    FROM python:3.12-slim
    WORKDIR /app
    COPY requirements.txt .
@@ -125,21 +126,56 @@ Dockerfile 생성
    COPY app/ .
    EXPOSE 5000
 
-포트: 포트 매핑 
+7. 포트: 포트 매핑 
    docker run -d -p 8080:5000 flask-app 
    호스트 컴퓨터 포트: Docker 내부 포트, 실행할 Docker이미지
    
-볼륨:
-   - Git/GitHUb:
- 
-4. 검증방법(어떤 명령으로 무엇을 확인했는가) + 결과 위치 링크
-5. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
+8. Attach 실습
+    우분투 이미지로 test-exit 컨테이너 생성 
+        ps>docker run --name test-exit ubuntu
+    기존 프로세스에 연결
+        ps>docker attach test-keep
+    ubuntu명령 프롬프트로 변경
+        ps>root@a1b2c3d4:/#
+           </>bash
+              pwd
+              ls
+              exit
+9. Exec 실습
+     종료된 컨테이너 다시 실행 
+          ps>docker start test-keep
+     exec실행
+          ps>docker exec -it test-keep bash
+     컨테이너 내부에서 ubuntu명령 실행
+          </>bash
+             pwd
+             ls
+             exit
+     프로세스는 종료됐지만 컨테이너는 그대로 살아 있음 확인
+          ps>docker ps  
+           NAMES       STATUS
+           test-keep   Up 2 minutes
+
+10. 기존 Dockerfile 기반 커스텀 이미지 제작 실습
+
+           
+
+15. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
    Port Mapping: 8080 -> 5000으로 했을 때 docker: Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint flask-web
    원인: 8080포트를 이미 다른 컨테이너(nginx)가 사용하고 있어서 에러 발생.
    조치: 실패한 컨테이너를 삭제하고 다른 포트 8082로 변경
          ps>docker rm flask-web
          ps>docker run -d --name flask-web -p 8082:5000 flask-assignment
    결과: 에러 없이 컨테이너 생성
+
+   컨테이너가 생성되자마자 종료되는 경우
+       docker run --name test-exit ubuntu
+   원인: 프로세스가 진행되지 않으면 입력이 없으므로 컨테이너도 종료
+   조치:bach 입출력 프로세스가 컨테이너 안에서 실행되도록 대화형 터미널 옵션 설정
+        ps>docker run -dit --name test-keep ubuntu bash
+   결과: Bash가 종료되지 않고 실행 상태를 유지하므로 컨테이너도 유지
+   
+   
    
      
 
