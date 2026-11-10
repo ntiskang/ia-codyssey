@@ -125,12 +125,13 @@ Images확인
    RUN pip install --no-cache-dir -r requirements.txt
    COPY app/ .
    EXPOSE 5000
+   CMD ["python", "app.py"]
 
-7. 포트: 포트 매핑 
+8. 포트: 포트 매핑 
    docker run -d -p 8080:5000 flask-app 
    호스트 컴퓨터 포트: Docker 내부 포트, 실행할 Docker이미지
    
-8. Attach 실습
+9. Attach 실습
     우분투 이미지로 test-exit 컨테이너 생성 
         ps>docker run --name test-exit ubuntu
     기존 프로세스에 연결
@@ -141,7 +142,7 @@ Images확인
               pwd
               ls
               exit
-9. Exec 실습
+10. Exec 실습
      종료된 컨테이너 다시 실행 
           ps>docker start test-keep
      exec실행
@@ -156,9 +157,36 @@ Images확인
            NAMES       STATUS
            test-keep   Up 2 minutes
 
-10. 기존 Dockerfile 기반 커스텀 이미지 제작 실습
+11. 기존 Dockerfile 기반 커스텀 이미지 제작 실습
+    목표: 현재 작업 중인 od-misson1 프로젝트의 Dockerfile을 활용하여 Flask 웹서버가 포함된 커스텀 Docker 이미지 제작
+    (1) 현 디렉토리 구조확인
+      PS>tree /F
+     
+C:.
+│  Dockerfile
+│  requirements.txt
+├─app
+│      app.py
+│      Dockerfile.txt
+│      requirements.txt
+└─evidence
 
-           
+    (2) Custom이미지 제작
+      ps>docker build -t flask-custom:v1 .
+    (3) 생성 이미지 확인
+      ps> docker images
+                                                                                                                                 i Info →   U  In Use
+IMAGE                     ID             DISK USAGE   CONTENT SIZE   EXTRA
+flask-assignment:latest   fd734c6f548e        198MB         48.3MB
+flask-custom:v1           a8e1b37e2eb5        198MB         48.3MB
+flask-web:latest          ea0696aaa1a9        198MB         48.3MB
+mysql:latest              3819b2b23835       1.08GB          304MB
+nginx:latest              165ddde8751e        243MB         66.8MB    U
+python:latest             8c9a3bf2d6de       1.65GB          437MB
+ubuntu:latest             6a06111c3b0a        163MB         45.9MB
+
+     (4) 커스텀 이미지로 다른 포트에  컨테이너 생성
+        ps>docker run -d --name flask-custom-web -p 8083:5000 flask-custom:v1
 
 15. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
    Port Mapping: 8080 -> 5000으로 했을 때 docker: Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint flask-web
