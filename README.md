@@ -229,14 +229,14 @@ ubuntu:latest             6a06111c3b0a        163MB         45.9MB
         After: Hello from Docker
 
 16.볼륨 영속성 검증
-   (1) Docker 볼륨 생성
+    (1) Docker 볼륨 생성
        ps>docker volume create assignment-volume
        assignment-volum
-   (2) 생성된 볼륨 목록 확인
+    (2) 생성된 볼륨 목록 확인
        ps>docker volume ls
        DRIVER    VOLUME NAME
        local     assignment-volume
-   (3) 볼륨 상세정보 확인
+    (3) 볼륨 상세정보 확인
        ps> docker volume inspect assignment-volume
 [
     {
@@ -249,31 +249,31 @@ ubuntu:latest             6a06111c3b0a        163MB         45.9MB
         "Scope": "local"
     }
 ]
-    (4) 볼륨을 연결한 컨테이너 생성
+     (4) 볼륨을 연결한 컨테이너 생성
         ps> docker run -d --name volume-test --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
         e50ea319e4957dbb968a0623dbd7d99e747833d77e482cd009714ba42aec10eb
-    (5) 연결상태 확인
+     (5) 연결상태 확인
         ps>docker inspect volume-test --format '{{json .Mounts}}'
         [{"Type":"volume","Name":"assignment-volume","Source":"/var/lib/docker/volumes/assignment-volume/_data","Destination":"/data","Driver":"local","Mode":"z","RW":true,"Propagation":""}]
-    (6) 컨테이너 내부에 데이터 저장
+     (6) 컨테이너 내부에 데이터 저장
         ps> docker exec volume-test sh -c "echo Persistent-Docker-Volume-Data > /data/result.txt"
-    (7) 파일 내용 확인
+     (7) 파일 내용 확인
         ps> docker exec volume-test cat /data/result.txt
         Persistent-Docker-Volume-Data
-    (8) 볼륨에 파일이 저장되었는지 확인
+     (8) 볼륨에 파일이 저장되었는지 확인
         ps> docker exec volume-test ls -l /data
         total 4
         -rw-r--r-- 1 root root 30 Nov 12 04:43 result.txt
-    (9) 컨테이너 삭제
+     (9) 컨테이너 삭제
         ps> docker rm -f volume-test
         volume-test
-    (10) 볼륨 존재 확인
+     (10) 볼륨 존재 확인
         PS> docker volume ls
         DRIVER    VOLUME NAME
         local     assignment-volume
-    (11) 새로운 컨테이너 생성
+     (11) 새로운 컨테이너 생성
         ps>docker run -d --name volume-test-new --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
-    (12) 기존 파일 내용 확인
+     (12) 기존 파일 내용 확인
        ps>docker exec volume-test-new cat /data/result.txt
        Persistent-Docker-Volume-Data
        컨테이너를 삭제했지만 기존 데이터는 그대로 남아 있음 확인.
