@@ -188,7 +188,30 @@ ubuntu:latest             6a06111c3b0a        163MB         45.9MB
      (4) 커스텀 이미지로 다른 포트에  컨테이너 생성
         ps>docker run -d --name flask-custom-web -p 8083:5000 flask-custom:v1
 
-15. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
+14. Docker 파일 권한 확인·변경
+    (1) 권한변경 실습용 컨테이너 생성
+        ps>docker run -dit --name permission-test ubuntu bash
+    (2) 컨테이너 접속
+        ps>docker exec -it permission-test bash
+    (3) 셸 스크립트 파일 test.sh 생성 및 권한 변경 내용 출력
+        root@ca3abf26dab2:/tmp# cd /tmp
+        printf '#!/bin/sh\necho Permission-Test-Success\n' > test.sh
+        chmod 644 test.sh
+        ls -l test.sh
+        -rw-r--r-- 1 root root 39 Nov 12 02:30 test.sh
+    (4) 실행 권한 부여
+        ps>tmp# chmod 755 test.sh
+    (5) 변경된 권한 확인
+        ps>tmp# ls -l test.sh
+          -rwxr-xr-x 1 root root 39 Nov 12 02:30 test.sh
+    (6) test.sh파일 직접 실행
+        ps>tmp# ./test.sh
+        Permission-Test-Success
+
+     
+ 
+
+16. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
    Port Mapping: 8080 -> 5000으로 했을 때 docker: Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint flask-web
    원인: 8080포트를 이미 다른 컨테이너(nginx)가 사용하고 있어서 에러 발생.
    조치: 실패한 컨테이너를 삭제하고 다른 포트 8082로 변경
