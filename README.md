@@ -207,11 +207,78 @@ ubuntu:latest             6a06111c3b0a        163MB         45.9MB
     (6) test.sh파일 직접 실행
         ps>tmp# ./test.sh
         Permission-Test-Success
-15. 
-     
- 
 
-16. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
+15. Docker 바인드 마운트 생성 실습
+    (1)  디렉터리를 만들고, 텍스트 파일에 내용을 저장한 다음, 저장된 내용 확인
+         ps>New-Item -ItemType Directory -Force bind-data
+         ps>Set-Content -Path .\bind-data\message.txt -Value "Before: Hello from Windows"
+         ps>Get-Content .\bind-data\message.txt
+         Before: Hello from Windows
+    (2) Docker 바인드 마운트와 연결(현재 Windows 디렉터리의 bind-data를 컨테이너 내부 /data에 연결)
+        ps> docker run --rm -it --mount "type=bind,source=$((Get-Location).Path)\bind-data,target=/data" alpine sh
+    (3) 컨테이너 안에서 파일 내용 출력
+        / # cat /data/message.txt
+        Before: Hello from Windows    
+    (4) 컨테이너 안에서 파일 내용 변경
+        / # echo "After: Hello from Docker" > /data/message.txt
+          Before: Hello from Windows
+        / # echo "After: Hello from Docker" > /data/message.txt
+    (5) 컨테이너 종료하고 파일 변경 여부 확인
+        / # exit
+        ps> Get-Content .\bind-data\message.txt
+        After: Hello from Docker
+
+16.볼륨 영속성 검증
+   (1) Docker 볼륨 생성
+       ps>docker volume create assignment-volume
+       assignment-volum
+   (2) 생성된 볼륨 목록 확인
+       ps>docker volume ls
+       DRIVER    VOLUME NAME
+       local     assignment-volume
+   (3) 볼륨 상세정보 확인
+       ps> docker volume inspect assignment-volume
+[
+    {
+        "CreatedAt": "2026-11-12T04:34:37Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/assignment-volume/_data",
+        "Name": "assignment-volume",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+    (4) 볼륨을 연결한 컨테이너 생성
+        ps> docker run -d --name volume-test --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
+        e50ea319e4957dbb968a0623dbd7d99e747833d77e482cd009714ba42aec10eb
+    (5) 연결상태 확인
+        ps>docker inspect volume-test --format '{{json .Mounts}}'
+        [{"Type":"volume","Name":"assignment-volume","Source":"/var/lib/docker/volumes/assignment-volume/_data","Destination":"/data","Driver":"local","Mode":"z","RW":true,"Propagation":""}]
+    (6) 컨테이너 내부에 데이터 저장
+        ps> docker exec volume-test sh -c "echo Persistent-Docker-Volume-Data > /data/result.txt"
+    (7) 파일 내용 확인
+        ps> docker exec volume-test cat /data/result.txt
+        Persistent-Docker-Volume-Data
+    (8) 볼륨에 파일이 저장되었는지 확인
+        ps> docker exec volume-test ls -l /data
+        total 4
+        -rw-r--r-- 1 root root 30 Nov 12 04:43 result.txt
+    (9) 컨테이너 삭제
+        ps> docker rm -f volume-test
+        volume-test
+    (10) 볼륨 존재 확인
+        PS> docker volume ls
+        DRIVER    VOLUME NAME
+        local     assignment-volume
+    (11) 새로운 컨테이너 생성
+        ps>docker run -d --name volume-test-new --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
+    (12) 기존 파일 내용 확인
+       ps>docker exec volume-test-new cat /data/result.txt
+       Persistent-Docker-Volume-Data
+       컨테이너를 삭제했지만 기존 데이터는 그대로 남아 있음 확인.
+
+17. 트러블 슈팅 2건 이상(문제->원인 가설-> 확인 -> 해결(대안)
    Port Mapping: 8080 -> 5000으로 했을 때 docker: Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint flask-web
    원인: 8080포트를 이미 다른 컨테이너(nginx)가 사용하고 있어서 에러 발생.
    조치: 실패한 컨테이너를 삭제하고 다른 포트 8082로 변경
