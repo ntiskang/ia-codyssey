@@ -207,7 +207,7 @@ ubuntu:latest             6a06111c3b0a        163MB         45.9MB
     (6) test.sh파일 직접 실행
         ps>tmp# ./test.sh
         Permission-Test-Success
-
+15. 
      
  
 
