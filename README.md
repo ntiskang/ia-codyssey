@@ -23,7 +23,7 @@ docker context ls
 
 **증거:** `evidence/03-docker-version.txt`, `evidence/03-docker-info.txt` [증거 추가 필요]
 
-## 2. 디렉터리 생성·이동·삭제 [평가 #1]
+## 2. 디렉터리 생성·이동·삭제 
 
 프로젝트 폴더를 만들고 이동한 뒤, 삭제 실습은 **별도의 임시 폴더**에서 수행합니다. 프로젝트 자체를 삭제하지 않습니다.
 
@@ -41,8 +41,7 @@ Test-Path .\delete-test
 
 **증거:** `evidence/01-directory-operations.txt`, `evidence/01-directory-operations.png` [증거 추가 필요]
 
-## 3. Linux 파일 권한 [평가 #2, #15]
-
+## 3. Linux 파일 권한 
 Linux/Alpine 컨테이너의 `sh`에서 다음을 실행합니다.
 
 ```sh
@@ -57,7 +56,7 @@ ls -l test.sh
 
 **증거:** 변경 전후 `ls -l` 및 `Permission-Test-Success`가 표시된 `evidence/02-permissions.txt` [기존 기록 대조 필요]
 
-## 4. Docker 정상 작동 확인 [평가 #3, #4]
+## 4. Docker 정상 작동 확인 
 
 ```powershell
 docker run --rm hello-world
@@ -67,7 +66,7 @@ docker run --rm hello-world
 
 **증거:** `evidence/04-hello-world.txt`, `evidence/04-hello-world.png` [증거 추가 필요]
 
-## 5. 이미지와 컨테이너의 차이 [평가 #5, #12]
+## 5. 이미지와 컨테이너의 차이 
 
 **이미지(image)**는 프로그램 코드·라이브러리·실행 설정을 담은 읽기 전용 실행 템플릿입니다. `docker build`는 Dockerfile의 지시를 바탕으로 이미지를 만듭니다. **컨테이너(container)**는 그 이미지를 기반으로 생성한 실행 인스턴스입니다. `docker run`은 컨테이너를 생성하고 시작하며, 실행 중 생성된 변경 내용은 컨테이너의 쓰기 가능 계층에 기록됩니다. 컨테이너를 삭제하면 그 계층도 사라지므로 보존할 데이터는 바인드 마운트나 볼륨에 저장합니다.
 
@@ -92,7 +91,7 @@ docker ps -a --filter "name=cleanup-demo"
 
 **증거:** `evidence/05-images-containers.txt`, `evidence/05-cleanup.txt` [증거 추가 필요]
 
-## 6. 프로젝트 구조와 설계 이유 [평가 #10]
+## 6. 프로젝트 구조와 설계 이유
 
 ```text
 od-mission1/
@@ -111,7 +110,7 @@ od-mission1/
 
 `Dockerfile`과 `requirements.txt`는 빌드 컨텍스트의 루트에 두어 `docker build .`와 `COPY requirements.txt .`를 간단하게 유지합니다. 애플리케이션 코드는 `app/`에 모으고, 바인드 마운트 자료는 `bind-data/`, 제출 증거는 `evidence/`에 분리해 재현성과 검토 편의성을 높입니다. 위 트리는 **권장 구조**이며 실제 존재 여부는 `tree /F`로 확인해야 합니다.
 
-## 7. Flask 이미지 빌드 [평가 #6]
+## 7. Flask 이미지 빌드 
 
 `Dockerfile`:
 
@@ -136,7 +135,7 @@ docker images flask-assignment
 
 **증거:** `evidence/06-build-full.txt`, `evidence/06-build-success.png` [증거 추가 필요]
 
-## 8. 컨테이너 실행과 포트 접속 검증 [평가 #7, #11, #13]
+## 8. 컨테이너 실행과 포트 접속 검증
 
 ### 실행 전 점검
 
@@ -168,8 +167,7 @@ curl.exe -i http://localhost:8082/
 
 `-p 8082:5000`은 **호스트의 8082 포트**로 들어온 연결을 **컨테이너의 5000 포트**로 전달합니다. Linux 컨테이너는 일반적으로 독립된 네트워크 네임스페이스를 사용하여 호스트와 별도의 네트워크 인터페이스·IP·포트 공간을 갖습니다. 포트 매핑은 이렇게 분리된 두 네트워크 공간 사이에 외부 접근 경로를 마련하는 기능입니다. 따라서 컨테이너 내부 `localhost:5000`과 호스트 `localhost:5000`은 같은 대상을 의미하지 않습니다.
 
-## 9. 바인드 마운트와 Docker Volume [평가 #8, #14, #17]
-
+## 9. 바인드 마운트와 Docker Volume 
 ### 바인드 마운트
 
 ```powershell
@@ -198,7 +196,7 @@ docker run --rm -v assignment-volume:/data alpine cat /data/result.txt
 
 **증거:** `evidence/08-volume-persistence.txt`, `evidence/08-backup-policy.md` [기존 실행 기록 대조 및 보완 필요]
 
-## 10. Git·GitHub 제출 확인 [평가 #9]
+## 10. Git·GitHub 제출 확인 
 
 ```powershell
 git init
@@ -227,7 +225,7 @@ git log -1 --oneline
 
 **증거:** `evidence/09-git-remote.txt`, `evidence/09-git-push.txt`, 실제 GitHub 커밋 링크 [증거 추가 필요]
 
-## 11. 트러블슈팅과 진단 [평가 #16, #18]
+## 11. 트러블슈팅과 진단
 
 | 증상 | 확인 방법 | 대응 방법 |
 |---|---|---|
@@ -257,42 +255,3 @@ Get-Process -Id <PID>
 
 위 링크는 **파일을 실제로 생성·추가해야 유효**합니다.
 
-## 12. 증거 수집 방법과 제출 체크리스트
-
-프로젝트 루트에서 다음을 실행하여 실제 결과를 파일로 남길 수 있습니다.
-
-```powershell
-New-Item -ItemType Directory -Force .\evidence | Out-Null
-docker --version | Out-File .\evidence\03-docker-version.txt
-docker info | Out-File .\evidence\03-docker-info.txt
-docker run --rm hello-world 2>&1 | Out-File .\evidence\04-hello-world.txt
-docker images | Out-File .\evidence\05-images-containers.txt
-docker ps -a | Out-File .\evidence\05-container-list.txt
-curl.exe -i http://localhost:8082/ 2>&1 | Out-File .\evidence\07-http-response.txt
-git remote -v | Out-File .\evidence\09-git-remote.txt
-```
-
-실행하지 않은 명령의 성공 결과를 임의로 작성하지 않습니다. `docker build`, `git push`처럼 상태를 변경하는 작업은 준비와 권한을 확인한 후 직접 실행하고, 그 세션에서 출력을 저장합니다.
-
-| 평가 번호 | 필수 보완 사항 | 제출 확인 |
-|---|---|---|
-| 1 | 디렉터리 생성·이동·삭제 출력/캡처 | [ ] |
-| 2 | `chmod 755` 선택 이유 | [x] 설명 작성 / [ ] 증거 확인 |
-| 3 | Docker 데몬 정보 | [ ] |
-| 4 | `hello-world` 실행 출력 | [ ] |
-| 5 | 이미지·컨테이너 정리 로그 | [ ] |
-| 6 | 전체 이미지 빌드 로그 | [ ] |
-| 7 | 브라우저 또는 `curl` 접속 증거 | [ ] |
-| 8 | 볼륨 백업·복구 원칙 | [x] |
-| 9 | `git remote -v`와 Push 성공 로그 | [ ] |
-| 10 | 디렉터리 설계 근거 | [x] |
-| 11 | 재현 전 포트·환경 점검 | [x] |
-| 12 | 이미지와 컨테이너 개념 비교 | [x] |
-| 13 | 네트워크 네임스페이스 설명 | [x] |
-| 14 | 절대·상대경로 사용 규칙 | [x] |
-| 15 | 권한 숫자와 특수 비트 | [x] |
-| 16 | 호스트 포트 점유 확인 | [x] |
-| 17 | 볼륨 백업 운영 원칙 | [x] |
-| 18 | 오류 원본 로그와 증거 링크 | [ ] |
-
-> **최종 제출 전:** `[ ]` 항목을 실제 실행 로그·스크린샷·GitHub 링크로 채우고, `evidence/` 파일이 존재하는지 확인하세요. 특히 FAIL 판정 항목은 설명만으로는 재평가에서 통과하지 못할 수 있습니다.
