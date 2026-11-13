@@ -1,1084 +1,300 @@
-# ia-codyssey
+# OD Mission 1 — Docker·Linux·Git 실습
 
-GitHub와 Codyssey를 연동하기 위해 생성한 Repository입니다.
+> **제출 상태:** 이 문서는 평가 의견 18개를 반영한 보완본입니다. `[증거 추가 필요]`는 아직 확인되지 않은 실행 결과입니다. 예시 명령어를 실제로 실행하고 로그와 화면 캡처를 첨부한 뒤 제출하세요. 예시 출력은 실측 결과로 간주하지 않습니다.
 
-## 1. 프로젝트 개요
+## 1. 실습 개요와 환경
 
-### 1.1 프로젝트 목적
+- 호스트: Windows / PowerShell
+- 컨테이너: Docker Desktop의 Linux 컨테이너
+- 실습 프로젝트: `od-mission1`
+- Flask 이미지: `flask-assignment`
+- Flask 컨테이너: `flask-web`
+- Flask 내부 포트: `5000`, 호스트 접속 포트: `8082`
+- Docker 버전(기존 기록): `Docker version 29.9.2, build a82e528`
 
-본 프로젝트는 Linux CLI, Docker, Git/GitHub를 활용하여 개발환경을 구축하고 컨테이너 기반 웹서버를 실행·관리하는 실습입니다.
-
-### 1.2 주요 실습 내용
-
-1. 터미널을 이용한 디렉터리 및 파일 관리
-2. Linux 파일 권한 확인 및 변경
-3. Docker 설치 및 실행환경 점검
-4. Docker 이미지와 컨테이너 생성 및 관리
-5. Python Flask 웹서버 개발
-6. Dockerfile을 이용한 커스텀 이미지 제작
-7. 포트 매핑을 통한 웹서버 접속
-8. Docker Attach와 Exec 명령어 실습
-9. 바인드 마운트를 이용한 파일 변경 반영
-10. Docker Volume을 이용한 데이터 영속성 검증
-11. 오류 발생 원인 분석 및 문제 해결
-12. Git/GitHub를 이용한 버전관리 및 협업
-
----
-
-## 2. 실행환경
-
-### 2.1 운영체제 및 터미널
-
-| 항목 | 실행환경 |
-|---|---|
-| OS | Windows Pro |
-| Windows Build | 26100 |
-| Shell | Windows PowerShell 5.1 |
-| Terminal | Windows Terminal |
-| Docker Desktop | 4.97.0 |
-| Docker Engine | 29.9.2 |
-| Docker Compose | v5.6.1 |
-| Git | 2.56.0.windows.4 |
-| Docker Context | desktop-linux |
-| Container OS/Arch | linux/amd64 |
-
-Windows 빌드 26100은 Windows 11 24H2 계열에 해당하지만, 실습 명령 출력에는 Windows 10 Pro로 표시되어 있습니다. 정확한 제품명은 추가 확인이 필요합니다.
-
-### 2.2 운영체제 정보 확인
-
-```powershell
-Get-ComputerInfo | Select-Object WindowsProductName, WindowsBuildLabEx, WindowsEditionId
-```
-
-실행 결과:
-
-```text
-WindowsProductName : Windows 10 Pro
-WindowsEditionId   : Professional
-WindowsBuildLabEx  : 26100.1.amd64fre.ge_release.240331-1435
-```
-
-### 2.3 PowerShell 버전 확인
-
-```powershell
-$PSVersionTable.PSVersion
-```
-
-실행 결과:
-
-```text
-Major  Minor  Build  Revision
------  -----  -----  --------
-5      1      26100  9711
-```
-
-### 2.4 Docker 버전 확인
+실행 환경 확인:
 
 ```powershell
 docker --version
-```
-
-실행 결과:
-
-```text
-Docker version 29.9.2, build a82e528
-```
-
-Docker 클라이언트와 서버 정보 확인:
-
-```powershell
 docker version
-```
-
-주요 실행 결과:
-
-```text
-Client:
- Version: 29.9.2
- API version: 1.56
- OS/Arch: windows/amd64
- Context: desktop-linux
-
-Server:
- Docker Desktop 4.97.0
- Engine Version: 29.9.2
- OS/Arch: linux/amd64
-```
-
-### 2.5 Docker Compose 버전 확인
-
-```powershell
-docker compose version
-```
-
-실행 결과:
-
-```text
-Docker Compose version v5.6.1
-```
-
-### 2.6 Git 버전 확인
-
-```powershell
-git --version
-```
-
-실행 결과:
-
-```text
-git version 2.56.0.windows.4
-```
-
-### 2.7 Docker 정보 및 이미지 확인
-
-Docker 실행환경 확인:
-
-```powershell
 docker info
+docker context ls
 ```
 
-이미지 목록 확인:
+`docker version`의 Client/Server 항목과 `docker info`의 Server 항목으로 데몬 연결 상태를 확인합니다. Docker Desktop 자체 로그는 문제가 있을 때 별도 증거로 수집합니다.
 
-```powershell
-docker images
-```
+**증거:** `evidence/03-docker-version.txt`, `evidence/03-docker-info.txt` [증거 추가 필요]
 
-초기 확인 이미지:
+## 2. 디렉터리 생성·이동·삭제 [평가 #1]
 
-```text
-IMAGE          ID             DISK USAGE
-nginx:latest   600f7cd45e27  243MB
-```
-
-실행 중이거나 종료된 컨테이너 확인:
-
-```powershell
-docker ps -a
-```
-
----
-
-## 3. Linux 파일 권한 이해
-
-### 3.1 파일 권한의 종류
-
-Linux는 파일과 디렉터리에 읽기, 쓰기, 실행 권한을 부여합니다.
-
-| 권한 | 의미 | 숫자 |
-|---|---|---|
-| r | Read: 읽기 | 4 |
-| w | Write: 쓰기 | 2 |
-| x | Execute: 실행 | 1 |
-| - | 권한 없음 | 0 |
-
-권한 숫자는 각 권한 값을 합산하여 계산합니다.
-
-예를 들어 `rwx`는 다음과 같습니다.
-
-```text
-r = 4
-w = 2
-x = 1
-
-4 + 2 + 1 = 7
-```
-
-### 3.2 사용자 구분
-
-Linux 파일 권한은 세 종류의 사용자에게 각각 부여됩니다.
-
-| 구분 | 설명 |
-|---|---|
-| Owner | 파일 소유자 |
-| Group | 파일이 속한 그룹 사용자 |
-| Others | 그 외 모든 사용자 |
-
-### 3.3 755와 644의 해석
-
-**755 권한**
-
-```text
-Owner  : rwx = 7
-Group  : r-x = 5
-Others : r-x = 5
-```
-
-표시 형태:
-
-```text
--rwxr-xr-x
-```
-
-**644 권한**
-
-```text
-Owner  : rw- = 6
-Group  : r-- = 4
-Others : r-- = 4
-```
-
-표시 형태:
-
-```text
--rw-r--r--
-```
-
----
-
-## 4. 프로젝트 디렉터리 생성
-
-### 4.1 작업 디렉터리 생성
-
-PowerShell에서 다음 명령어를 실행합니다.
+프로젝트 폴더를 만들고 이동한 뒤, 삭제 실습은 **별도의 임시 폴더**에서 수행합니다. 프로젝트 자체를 삭제하지 않습니다.
 
 ```powershell
 mkdir od-mission1
 cd od-mission1
-
-mkdir app
-mkdir evidence
+Get-Location
+New-Item -ItemType Directory -Path .\delete-test
+Get-ChildItem
+Remove-Item -Path .\delete-test -Recurse -Force
+Test-Path .\delete-test
 ```
 
-### 4.2 Flask 웹서버 파일 생성
+마지막 `Test-Path`의 실제 출력이 `False`이면 임시 폴더가 삭제되었다는 뜻입니다. 생성·이동·삭제 과정의 콘솔 출력과 캡처를 저장합니다. 이미 `od-mission1`에 있다면 `mkdir od-mission1`을 다시 실행하지 말고 현재 위치를 확인하세요.
 
-```powershell
-notepad app\app.py
-```
+**증거:** `evidence/01-directory-operations.txt`, `evidence/01-directory-operations.png` [증거 추가 필요]
 
-### 4.3 프로젝트 디렉터리 구조
+## 3. Linux 파일 권한 [평가 #2, #15]
 
-실습 당시 확인한 구조는 다음과 같습니다.
+Linux/Alpine 컨테이너의 `sh`에서 다음을 실행합니다.
 
-```text
-od-mission1/
-│
-├── Dockerfile
-├── requirements.txt
-│
-├── app/
-│   ├── app.py
-│   ├── Dockerfile.txt
-│   └── requirements.txt
-│
-└── evidence/
-```
-
-`app/` 내부의 `Dockerfile.txt`와 `requirements.txt`는 실습 중 생성된 파일입니다. 실제 이미지 빌드에는 프로젝트 루트의 `Dockerfile`과 `requirements.txt`를 사용합니다.
-
-디렉터리 구조 확인:
-
-```powershell
-tree /F
-```
-
----
-
-## 5. Python Flask 웹서버 작성
-
-### 5.1 app.py
-
-파일 위치:
-
-```text
-od-mission1/app/app.py
-```
-
-Python 코드:
-
-```python
-from flask import Flask
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return """
-    <h1>Odyssey Docker Web Server Assignment</h1>
-    <p>Hello! My Docker container is running.</p>
-    <p>Port Mapping: 8080 -> 5000</p>
-    """
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-```
-
-### 5.2 주요 코드 설명
-
-| 코드 | 설명 |
-|---|---|
-| `from flask import Flask` | Flask 클래스 불러오기 |
-| `Flask(__name__)` | Flask 애플리케이션 생성 |
-| `@app.route("/")` | 루트 URL 요청 처리 |
-| `def home()` | 웹페이지 내용 반환 |
-| `host="0.0.0.0"` | 모든 네트워크 인터페이스에서 접속 허용 |
-| `port=5000` | 컨테이너 내부 웹서버 포트 |
-
-**참고:** HTML의 포트 매핑 문구는 최초 실습 기준입니다. 실제 호스트 포트를 8082나 8083으로 변경하면 화면의 안내 문구도 해당 포트에 맞게 수정해야 합니다.
-
----
-
-## 6. Dockerfile 작성
-
-### 6.1 requirements.txt
-
-프로젝트 루트에 다음 파일을 생성합니다.
-
-```text
-Flask
-```
-
-### 6.2 Dockerfile
-
-```dockerfile
-FROM python:3.12-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY app/ .
-
-EXPOSE 5000
-
-CMD ["python", "app.py"]
-```
-
-### 6.3 Dockerfile 명령어 설명
-
-| 명령어 | 설명 |
-|---|---|
-| FROM | 기반 이미지 지정 |
-| WORKDIR | 컨테이너 작업 디렉터리 설정 |
-| COPY | 호스트 파일을 이미지 내부로 복사 |
-| RUN | 이미지 빌드 중 명령 실행 |
-| EXPOSE | 컨테이너에서 사용할 포트 문서화 |
-| CMD | 컨테이너 시작 시 실행할 기본 명령 |
-
-`--no-cache-dir`은 pip가 다운로드한 패키지의 캐시를 저장하지 않도록 하는 옵션입니다. Docker 이미지 크기를 줄이는 데 도움이 됩니다.
-
----
-
-## 7. Docker 이미지 빌드 및 실행
-
-### 7.1 Docker 이미지 생성
-
-```powershell
-docker build -t flask-assignment .
-```
-
-명령어 설명:
-
-- `docker build`: Docker 이미지 빌드
-- `-t`: 이미지 이름 및 태그 지정
-- `flask-assignment`: 생성할 이미지 이름
-- `.`: 현재 디렉터리를 빌드 컨텍스트로 지정
-
-### 7.2 Docker 컨테이너 실행
-
-최초 실습 명령:
-
-```powershell
-docker run -d -p 8080:5000 flask-assignment
-```
-
-포트 매핑 형식:
-
-```text
-호스트 포트 : 컨테이너 포트
-```
-
-예를 들어:
-
-```text
-8080:5000
-```
-
-이는 Windows 컴퓨터의 8080 포트로 들어오는 요청을 컨테이너 내부 5000 포트로 전달한다는 의미입니다.
-
-### 7.3 포트 충돌 후 변경
-
-8080 포트를 Nginx가 사용하고 있어 8082 포트로 변경했습니다.
-
-```powershell
-docker run -d --name flask-web -p 8082:5000 flask-assignment
-```
-
-웹브라우저 접속 주소:
-
-```text
-http://localhost:8082
-```
-
----
-
-## 8. Docker Attach 실습
-
-### 8.1 Ubuntu 컨테이너 생성
-
-```powershell
-docker run --name test-exit ubuntu
-```
-
-Ubuntu 이미지의 기본 프로세스가 종료되면 컨테이너도 종료됩니다.
-
-### 8.2 실행 상태를 유지하는 컨테이너 생성
-
-```powershell
-docker run -dit --name test-keep ubuntu bash
-```
-
-옵션 설명:
-
-| 옵션 | 의미 |
-|---|---|
-| -d | 백그라운드 실행 |
-| -i | 표준 입력 유지 |
-| -t | 가상 터미널 할당 |
-| --name | 컨테이너 이름 지정 |
-
-### 8.3 Attach 명령 실행
-
-```powershell
-docker attach test-keep
-```
-
-컨테이너 내부에서:
-
-```bash
-pwd
-ls
-```
-
-`docker attach`는 컨테이너의 기존 메인 프로세스에 터미널을 연결합니다.
-
-**주의:** Attach 상태에서 `exit`를 실행하여 메인 Bash 프로세스가 종료되면 컨테이너도 종료될 수 있습니다.
-
-컨테이너를 계속 실행한 상태로 분리하려면 기본 분리 키인 `Ctrl+P`, `Ctrl+Q`를 사용합니다.
-
----
-
-## 9. Docker Exec 실습
-
-### 9.1 종료된 컨테이너 재시작
-
-```powershell
-docker start test-keep
-```
-
-### 9.2 컨테이너 내부에 새로운 Bash 실행
-
-```powershell
-docker exec -it test-keep bash
-```
-
-컨테이너 내부 명령:
-
-```bash
-pwd
-ls
-exit
-```
-
-### 9.3 컨테이너 상태 확인
-
-```powershell
-docker ps
-```
-
-실행 결과 예시:
-
-```text
-NAMES       STATUS
-test-keep   Up 2 minutes
-```
-
-`docker exec`로 실행한 Bash를 종료해도 컨테이너의 메인 프로세스가 계속 실행 중이면 컨테이너는 유지됩니다.
-
-### 9.4 Attach와 Exec 비교
-
-| 구분 | Attach | Exec |
-|---|---|---|
-| 연결 대상 | 기존 메인 프로세스 | 새로 실행하는 프로세스 |
-| 주요 용도 | 메인 프로세스 입출력 연결 | 컨테이너 내부 명령 실행 |
-| `exit` 영향 | 메인 프로세스 종료 가능 | Exec로 시작한 셸만 종료 |
-| 활용 | 실행 프로세스 관찰 | 점검 및 유지보수 |
-
----
-
-## 10. 커스텀 Docker 이미지 제작
-
-### 10.1 실습 목표
-
-기존 Dockerfile을 활용하여 Flask 웹서버가 포함된 커스텀 이미지를 제작합니다.
-
-### 10.2 디렉터리 구조 확인
-
-```powershell
-tree /F
-```
-
-### 10.3 커스텀 이미지 빌드
-
-```powershell
-docker build -t flask-custom:v1 .
-```
-
-이미지 이름:
-
-```text
-flask-custom
-```
-
-태그:
-
-```text
-v1
-```
-
-### 10.4 생성된 이미지 확인
-
-```powershell
-docker images
-```
-
-실행 결과:
-
-```text
-IMAGE                     ID             DISK USAGE
-flask-assignment:latest   fd734c6f548e   198MB
-flask-custom:v1           a8e1b37e2eb5   198MB
-flask-web:latest          ea0696aaa1a9   198MB
-mysql:latest              3819b2b23835  1.08GB
-nginx:latest              165ddde8751e  243MB
-python:latest             8c9a3bf2d6de  1.65GB
-ubuntu:latest             6a06111c3b0a  163MB
-```
-
-### 10.5 커스텀 이미지로 컨테이너 실행
-
-```powershell
-docker run -d --name flask-custom-web -p 8083:5000 flask-custom:v1
-```
-
-접속 주소:
-
-```text
-http://localhost:8083
-```
-
----
-
-## 11. Docker 파일 권한 확인 및 변경
-
-### 11.1 실습용 컨테이너 생성
-
-```powershell
-docker run -dit --name permission-test ubuntu bash
-```
-
-### 11.2 컨테이너 접속
-
-```powershell
-docker exec -it permission-test bash
-```
-
-### 11.3 실습용 스크립트 생성
-
-```bash
-cd /tmp
-
+```sh
 printf '#!/bin/sh\necho Permission-Test-Success\n' > test.sh
-```
-
-### 11.4 파일 권한을 644로 설정
-
-```bash
-chmod 644 test.sh
 ls -l test.sh
-```
-
-실행 결과:
-
-```text
--rw-r--r-- 1 root root 39 Nov 12 02:30 test.sh
-```
-
-### 11.5 실행 권한 부여
-
-```bash
 chmod 755 test.sh
-```
-
-### 11.6 변경된 권한 확인
-
-```bash
 ls -l test.sh
-```
-
-실행 결과:
-
-```text
--rwxr-xr-x 1 root root 39 Nov 12 02:30 test.sh
-```
-
-### 11.7 스크립트 실행
-
-```bash
 ./test.sh
 ```
 
-실행 결과:
+`755`는 소유자에게 읽기·쓰기·실행(`rwx` = 7), 그룹과 기타 사용자에게 읽기·실행(`r-x` = 5)을 허용합니다. 스크립트를 실행할 수 있게 하면서 다른 사용자에게 수정 권한을 주지 않기 위해 선택했습니다. `4=읽기`, `2=쓰기`, `1=실행`입니다. 특수 권한 비트에는 setuid, setgid, sticky bit가 있으며 이번 기본 실습의 범위는 아닙니다.
 
-```text
-Permission-Test-Success
-```
+**증거:** 변경 전후 `ls -l` 및 `Permission-Test-Success`가 표시된 `evidence/02-permissions.txt` [기존 기록 대조 필요]
 
-**검증 결과:** 파일 권한을 644에서 755로 변경한 뒤 스크립트를 직접 실행할 수 있음을 확인했습니다.
-
----
-
-## 12. Docker 바인드 마운트 실습
-
-### 12.1 실습 목적
-
-Windows 호스트 디렉터리와 Docker 컨테이너 디렉터리를 연결하고, 컨테이너에서 변경한 파일 내용이 호스트에도 반영되는지 확인합니다.
-
-### 12.2 디렉터리 및 파일 생성
-
-PowerShell에서:
+## 4. Docker 정상 작동 확인 [평가 #3, #4]
 
 ```powershell
-New-Item -ItemType Directory -Force bind-data
-
-Set-Content -Path .\bind-data\message.txt -Value "Before: Hello from Windows"
+docker run --rm hello-world
 ```
 
-파일 내용 확인:
+실행 결과에 `Hello from Docker!` 메시지가 나타나는지 확인합니다. 이는 Docker 클라이언트가 데몬에 요청하고 데몬이 이미지를 내려받거나 찾아 컨테이너를 실행했다는 기본 점검입니다. **실제 콘솔 출력을 첨부해야 PASS 증거가 됩니다.**
+
+**증거:** `evidence/04-hello-world.txt`, `evidence/04-hello-world.png` [증거 추가 필요]
+
+## 5. 이미지와 컨테이너의 차이 [평가 #5, #12]
+
+**이미지(image)**는 프로그램 코드·라이브러리·실행 설정을 담은 읽기 전용 실행 템플릿입니다. `docker build`는 Dockerfile의 지시를 바탕으로 이미지를 만듭니다. **컨테이너(container)**는 그 이미지를 기반으로 생성한 실행 인스턴스입니다. `docker run`은 컨테이너를 생성하고 시작하며, 실행 중 생성된 변경 내용은 컨테이너의 쓰기 가능 계층에 기록됩니다. 컨테이너를 삭제하면 그 계층도 사라지므로 보존할 데이터는 바인드 마운트나 볼륨에 저장합니다.
 
 ```powershell
-Get-Content .\bind-data\message.txt
-```
-
-실행 결과:
-
-```text
-Before: Hello from Windows
-```
-
-### 12.3 바인드 마운트 연결
-
-```powershell
-docker run --rm -it --mount "type=bind,source=$((Get-Location).Path)\bind-data,target=/data" alpine sh
-```
-
-명령어 설명:
-
-| 항목 | 의미 |
-|---|---|
-| --rm | 컨테이너 종료 시 자동 삭제 |
-| -it | 대화형 터미널 실행 |
-| type=bind | 바인드 마운트 지정 |
-| source | Windows 호스트 디렉터리 |
-| target | 컨테이너 내부 연결 경로 |
-| alpine | 사용할 이미지 |
-| sh | 실행할 셸 |
-
-### 12.4 컨테이너에서 파일 확인
-
-```sh
-cat /data/message.txt
-```
-
-실행 결과:
-
-```text
-Before: Hello from Windows
-```
-
-### 12.5 컨테이너에서 파일 수정
-
-```sh
-echo "After: Hello from Docker" > /data/message.txt
-```
-
-### 12.6 컨테이너 종료
-
-```sh
-exit
-```
-
-### 12.7 Windows에서 변경 내용 확인
-
-```powershell
-Get-Content .\bind-data\message.txt
-```
-
-실행 결과:
-
-```text
-After: Hello from Docker
-```
-
-**검증 결과:** Docker 컨테이너에서 수정한 파일 내용이 Windows 호스트 파일에도 반영됨을 확인했습니다.
-
----
-
-## 13. Docker Volume 영속성 검증
-
-### 13.1 실습 목적
-
-Docker Volume을 생성한 뒤 컨테이너를 삭제하고 새 컨테이너를 생성해도 기존 데이터가 유지되는지 확인합니다.
-
-### 13.2 Docker Volume 생성
-
-```powershell
-docker volume create assignment-volume
-```
-
-실행 결과:
-
-```text
-assignment-volume
-```
-
-### 13.3 볼륨 목록 확인
-
-```powershell
-docker volume ls
-```
-
-실행 결과:
-
-```text
-DRIVER    VOLUME NAME
-local     assignment-volume
-```
-
-### 13.4 볼륨 상세정보 확인
-
-```powershell
-docker volume inspect assignment-volume
-```
-
-실행 결과:
-
-```json
-[
-  {
-    "CreatedAt": "2026-11-12T04:34:37Z",
-    "Driver": "local",
-    "Labels": null,
-    "Mountpoint": "/var/lib/docker/volumes/assignment-volume/_data",
-    "Name": "assignment-volume",
-    "Options": null,
-    "Scope": "local"
-  }
-]
-```
-
-### 13.5 볼륨을 연결한 컨테이너 생성
-
-```powershell
-docker run -d --name volume-test --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
-```
-
-실행 결과:
-
-```text
-e50ea319e4957dbb968a0623dbd7d99e747833d77e482cd009714ba42aec10eb
-```
-
-### 13.6 마운트 연결 상태 확인
-
-```powershell
-docker inspect volume-test --format '{{json .Mounts}}'
-```
-
-주요 확인 내용:
-
-```json
-{
-  "Type": "volume",
-  "Name": "assignment-volume",
-  "Destination": "/data",
-  "RW": true
-}
-```
-
-### 13.7 컨테이너 내부에 데이터 저장
-
-```powershell
-docker exec volume-test sh -c "echo Persistent-Docker-Volume-Data > /data/result.txt"
-```
-
-### 13.8 저장된 파일 내용 확인
-
-```powershell
-docker exec volume-test cat /data/result.txt
-```
-
-실행 결과:
-
-```text
-Persistent-Docker-Volume-Data
-```
-
-### 13.9 볼륨 내부 파일 확인
-
-```powershell
-docker exec volume-test ls -l /data
-```
-
-실행 결과:
-
-```text
-total 4
--rw-r--r-- 1 root root 30 Nov 12 04:43 result.txt
-```
-
-### 13.10 기존 컨테이너 삭제
-
-```powershell
-docker rm -f volume-test
-```
-
-실행 결과:
-
-```text
-volume-test
-```
-
-### 13.11 볼륨 유지 여부 확인
-
-```powershell
-docker volume ls
-```
-
-실행 결과:
-
-```text
-DRIVER    VOLUME NAME
-local     assignment-volume
-```
-
-### 13.12 새로운 컨테이너 생성
-
-```powershell
-docker run -d --name volume-test-new --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
-```
-
-### 13.13 기존 데이터 확인
-
-```powershell
-docker exec volume-test-new cat /data/result.txt
-```
-
-실행 결과:
-
-```text
-Persistent-Docker-Volume-Data
-```
-
-**검증 결과:** 기존 컨테이너를 삭제한 뒤 동일한 Docker Volume을 새 컨테이너에 연결해도 저장된 데이터가 유지됨을 확인했습니다.
-
----
-
-## 14. 트러블슈팅
-
-### 14.1 문제 1: Docker 포트 충돌
-
-**문제 상황**
-
-Flask 컨테이너를 8080 포트로 실행하려 했으나 오류가 발생했습니다.
-
-```powershell
-docker run -d --name flask-web -p 8080:5000 flask-assignment
-```
-
-오류 메시지:
-
-```text
-docker: Error response from daemon:
-failed to set up container networking:
-driver failed programming external connectivity
-on endpoint flask-web
-```
-
-**원인 가설**
-
-8080 포트를 다른 컨테이너가 사용하고 있을 가능성이 있다고 판단했습니다.
-
-**확인 방법**
-
-```powershell
+docker images
 docker ps
-```
-
-기존 Nginx 컨테이너가 8080 포트를 사용하고 있음을 확인했습니다.
-
-**해결 방법**
-
-실패한 컨테이너를 삭제했습니다.
-
-```powershell
-docker rm flask-web
-```
-
-호스트 포트를 8082로 변경하여 다시 실행했습니다.
-
-```powershell
-docker run -d --name flask-web -p 8082:5000 flask-assignment
-```
-
-**해결 결과**
-
-포트 충돌 없이 컨테이너가 생성되었습니다.
-
-접속 주소:
-
-```text
-http://localhost:8082
-```
-
-### 14.2 문제 2: Ubuntu 컨테이너 즉시 종료
-
-**문제 상황**
-
-다음 명령어로 컨테이너를 생성했으나 실행 직후 종료되었습니다.
-
-```powershell
-docker run --name test-exit ubuntu
-```
-
-**원인 가설**
-
-컨테이너의 메인 프로세스가 종료되어 컨테이너도 종료되었을 것으로 판단했습니다.
-
-**확인 방법**
-
-```powershell
 docker ps -a
 ```
 
-컨테이너 상태가 `Exited`인지 확인했습니다.
+기존 기록에는 `nginx:latest` 이미지(`600f7cd45e27`, `243MB`)가 있습니다. 실제 최신 목록과 다를 수 있습니다.
 
-**해결 방법**
-
-Bash를 대화형 터미널과 함께 실행하고 입력 스트림을 유지하도록 설정했습니다.
+**정리 실습(임시 컨테이너와 이미지에 한정):**
 
 ```powershell
-docker run -dit --name test-keep ubuntu bash
+docker run -d --name cleanup-demo nginx:latest
+docker ps -a --filter "name=cleanup-demo"
+docker rm -f cleanup-demo
+docker ps -a --filter "name=cleanup-demo"
 ```
 
-**해결 결과**
+이미지 삭제는 해당 이미지를 사용하는 다른 컨테이너가 없는지 확인한 뒤 진행합니다. `nginx:latest`를 다른 실습에서 사용 중이면 삭제하지 않습니다. 이미지 정리 예시는 `docker rmi <사용하지-않는-이미지-ID>`입니다.
 
-Bash 프로세스가 실행 상태를 유지하여 컨테이너도 계속 실행되었습니다.
+**증거:** `evidence/05-images-containers.txt`, `evidence/05-cleanup.txt` [증거 추가 필요]
 
-```powershell
-docker ps
-```
-
-실행 결과:
+## 6. 프로젝트 구조와 설계 이유 [평가 #10]
 
 ```text
-NAMES       STATUS
-test-keep   Up 2 minutes
+od-mission1/
+├── Dockerfile
+├── requirements.txt
+├── README.md
+├── app/
+│   └── app.py
+├── bind-data/
+│   └── message.txt
+└── evidence/
+    ├── 01-directory-operations.txt
+    ├── 02-permissions.txt
+    └── ...
 ```
 
----
+`Dockerfile`과 `requirements.txt`는 빌드 컨텍스트의 루트에 두어 `docker build .`와 `COPY requirements.txt .`를 간단하게 유지합니다. 애플리케이션 코드는 `app/`에 모으고, 바인드 마운트 자료는 `bind-data/`, 제출 증거는 `evidence/`에 분리해 재현성과 검토 편의성을 높입니다. 위 트리는 **권장 구조**이며 실제 존재 여부는 `tree /F`로 확인해야 합니다.
 
-## 15. 실습 결과 요약
+## 7. Flask 이미지 빌드 [평가 #6]
 
-| 실습 항목 | 수행 내용 | 결과 |
-|---|---|---|
-| 개발환경 확인 | Windows, Docker, Git 버전 확인 | 완료 |
-| 파일 권한 관리 | chmod 644 → 755 | 완료 |
-| 디렉터리 생성 | 프로젝트 구조 생성 | 완료 |
-| Flask 웹서버 | Python 웹 애플리케이션 작성 | 완료 |
-| Dockerfile | Flask 실행 이미지 정의 | 완료 |
-| Docker 이미지 | 커스텀 이미지 빌드 | 완료 |
-| 포트 매핑 | 8082, 8083 포트 사용 | 컨테이너 생성 확인 |
-| Docker Attach | 기존 프로세스 연결 | 실습 |
-| Docker Exec | 실행 중 컨테이너에 명령 실행 | 완료 |
-| 바인드 마운트 | 호스트·컨테이너 파일 변경 공유 | 검증 완료 |
-| Docker Volume | 컨테이너 삭제 후 데이터 유지 | 검증 완료 |
-| 트러블슈팅 | 포트 충돌, 컨테이너 종료 문제 | 2건 해결 |
-| Git/GitHub | 버전 확인 | Commit/Push 증거 추가 필요 |
+`Dockerfile`:
 
----
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app/ .
+EXPOSE 5000
+CMD ["python3", "app.py"]
+```
 
-## 16. Git/GitHub 버전관리
+`requirements.txt`에는 Flask 앱에 필요한 의존성을 기록합니다. `app/app.py`는 `0.0.0.0:5000`에서 요청을 받도록 설정해야 합니다. `EXPOSE 5000`은 이미지의 사용 포트를 문서화하며, 호스트 포트를 자동 공개하지는 않습니다.
 
-본 Repository는 GitHub와 Codyssey 연동 및 실습 결과 관리를 위해 사용합니다.
+```powershell
+docker build --progress=plain --no-cache -t flask-assignment . 2>&1 | Tee-Object -FilePath .\evidence\06-build-full.txt
+docker images flask-assignment
+```
 
-### 16.1 Git 저장소 초기화
+`--progress=plain`은 상세 빌드 단계를 텍스트로 출력합니다. `Tee-Object`로 **실제 전체 로그**를 저장합니다. 로그 끝의 성공 여부를 확인하고 오류가 있다면 오류 메시지도 삭제하지 않습니다. PowerShell 파이프라인을 거친 종료 코드 확인은 환경에 따라 주의가 필요하므로 이미지 생성 여부도 함께 확인합니다.
+
+**증거:** `evidence/06-build-full.txt`, `evidence/06-build-success.png` [증거 추가 필요]
+
+## 8. 컨테이너 실행과 포트 접속 검증 [평가 #7, #11, #13]
+
+### 실행 전 점검
+
+- [ ] Docker Desktop 실행 및 `docker info` 성공
+- [ ] `flask-assignment` 이미지 존재
+- [ ] `flask-web`이라는 이름의 기존 컨테이너 유무 확인
+- [ ] 호스트 `8082` 포트가 다른 프로세스에서 사용 중인지 확인
+- [ ] `app.py`가 컨테이너 안에서 `0.0.0.0:5000`으로 수신하는지 확인
+
+```powershell
+docker ps -a --filter "name=flask-web"
+Get-NetTCPConnection -LocalPort 8082 -ErrorAction SilentlyContinue
+```
+
+기존 `flask-web` 컨테이너가 있으면 로그와 필요한 데이터를 확인한 다음, 교체가 필요할 때만 삭제합니다.
+
+```powershell
+docker run -d --name flask-web -p 8082:5000 flask-assignment
+docker ps --filter "name=flask-web"
+docker logs flask-web
+curl.exe -i http://localhost:8082/
+```
+
+`curl.exe -i` 출력에서 HTTP 상태 코드와 응답 본문을 확인합니다. 정상 접속이면 브라우저 `http://localhost:8082/` 화면도 캡처합니다. 응답 상태와 본문은 앱 구현에 따라 달라지므로 실제 결과를 기록해야 합니다.
+
+**증거:** `evidence/07-http-response.txt`, `evidence/07-browser.png`, `evidence/07-container-logs.txt` [증거 추가 필요]
+
+### 포트 포워딩과 네트워크 네임스페이스
+
+`-p 8082:5000`은 **호스트의 8082 포트**로 들어온 연결을 **컨테이너의 5000 포트**로 전달합니다. Linux 컨테이너는 일반적으로 독립된 네트워크 네임스페이스를 사용하여 호스트와 별도의 네트워크 인터페이스·IP·포트 공간을 갖습니다. 포트 매핑은 이렇게 분리된 두 네트워크 공간 사이에 외부 접근 경로를 마련하는 기능입니다. 따라서 컨테이너 내부 `localhost:5000`과 호스트 `localhost:5000`은 같은 대상을 의미하지 않습니다.
+
+## 9. 바인드 마운트와 Docker Volume [평가 #8, #14, #17]
+
+### 바인드 마운트
+
+```powershell
+New-Item -ItemType Directory -Force .\bind-data
+docker run --rm -it --mount "type=bind,source=$((Get-Location).Path)\bind-data,target=/data" alpine sh
+```
+
+PowerShell에서 `Get-Location`으로 얻은 **호스트 절대경로**를 Docker의 `source`에 전달합니다. 컨테이너 내부는 `/data`라는 **절대경로**를 사용합니다. README의 재현 명령은 작업 디렉터리를 명확히 하고, 상대경로는 프로젝트 내부 파일 탐색에만 쓰는 것을 권장합니다.
+
+### Docker 관리 볼륨과 영속성
+
+```powershell
+docker volume create assignment-volume
+docker run -d --name volume-test -v assignment-volume:/data alpine sleep 3600
+docker exec volume-test sh -c 'echo Persistent-Docker-Volume-Data > /data/result.txt'
+docker exec volume-test cat /data/result.txt
+docker rm -f volume-test
+docker run --rm -v assignment-volume:/data alpine cat /data/result.txt
+```
+
+컨테이너를 삭제하고 새 컨테이너에 같은 볼륨을 연결했을 때 데이터가 남아 있으면 **컨테이너 수명과 데이터 수명이 분리됨**을 확인할 수 있습니다.
+
+### 백업·복구 원칙
+
+볼륨은 컨테이너 삭제에 대비한 **영속 저장소**이지, 그 자체로 백업은 아닙니다. 중요한 데이터는 주기적으로 별도의 호스트 디스크나 안전한 외부 저장소에 백업하고, 복구 시험을 수행해야 합니다. 백업 전에는 가능하면 해당 데이터를 쓰는 애플리케이션을 정지하거나 일관성 있는 스냅샷을 사용합니다. 백업 파일의 날짜·크기·복구 확인 결과를 함께 기록합니다. 이번 평가 항목에서는 구체적인 백업 명령보다 이 운영 원칙을 문서화합니다.
+
+**증거:** `evidence/08-volume-persistence.txt`, `evidence/08-backup-policy.md` [기존 실행 기록 대조 및 보완 필요]
+
+## 10. Git·GitHub 제출 확인 [평가 #9]
 
 ```powershell
 git init
+git status
+git remote -v
 ```
 
-### 16.2 파일 추가
-
-```powershell
-git add .
-```
-
-### 16.3 커밋 생성
-
-```powershell
-git commit -m "Add Docker mission files and documentation"
-```
-
-### 16.4 GitHub 원격 저장소 연결
+원격 저장소가 **아직 없을 때만** 다음 명령어를 실행합니다.
 
 ```powershell
 git remote add origin <REPOSITORY_URL>
 ```
 
-`<REPOSITORY_URL>`은 실제 GitHub 저장소 주소로 변경합니다.
-
-### 16.5 GitHub에 업로드
+이미 `origin`이 존재하고 URL을 수정해야 한다면 `git remote set-url origin <REPOSITORY_URL>`을 사용합니다.
 
 ```powershell
+git add README.md Dockerfile requirements.txt app evidence
+git commit -m "Document Docker mission evidence"
 git branch -M main
 git push -u origin main
+git remote -v
+git log -1 --oneline
 ```
 
-이미 GitHub 저장소에 기존 커밋이 있는 경우에는 먼저 원격 저장소 이력을 확인하고 통합해야 할 수 있습니다.
+`evidence/`가 존재해야 `git add`에 포함할 수 있습니다. 원격 저장소에 기존 커밋이 있다면 무조건 `push`하지 말고 먼저 원격 이력을 확인하고 통합합니다. `git push`가 성공한 뒤 실제 출력과 GitHub의 해당 커밋 URL을 증거로 남깁니다. 비밀번호·토큰·개인정보가 담긴 로그는 업로드 전에 가립니다.
 
-위 명령어는 향후 수행할 Git/GitHub 작업 절차이며, 실제 실행 완료 여부는 아직 확인되지 않았습니다.
+**증거:** `evidence/09-git-remote.txt`, `evidence/09-git-push.txt`, 실제 GitHub 커밋 링크 [증거 추가 필요]
 
----
+## 11. 트러블슈팅과 진단 [평가 #16, #18]
 
-## 17. 실습 증거자료 관리
+| 증상 | 확인 방법 | 대응 방법 |
+|---|---|---|
+| 호스트 포트 충돌 | `docker ps`, `Get-NetTCPConnection -LocalPort 8082` | 기존 컨테이너·프로세스를 확인한 뒤 포트 변경 또는 불필요한 점유 해제 |
+| 컨테이너 이름 충돌 | `docker ps -a --filter "name=flask-web"` | 기존 컨테이너 보존 필요성을 확인한 후 삭제·이름 변경 |
+| Docker 데몬 연결 실패 | `docker info`, Docker Desktop 상태 | Docker Desktop 시작 및 Linux 컨테이너 엔진 상태 확인 |
+| Flask 컨테이너 종료 | `docker ps -a`, `docker logs flask-web` | 앱 오류·의존성·실행 명령 점검 |
+| 볼륨 파일 없음 | `docker inspect volume-test`, 컨테이너 내부 `ls -l /data` | 볼륨 이름·마운트 대상·파일 생성 명령 재확인 |
 
-실습 결과를 `evidence/` 디렉터리에 저장합니다.
+Windows에서 포트 소유 프로세스를 확인하는 방법:
 
-권장 증거자료:
+```powershell
+netstat -ano | findstr :8082
+Get-NetTCPConnection -LocalPort 8082 -ErrorAction SilentlyContinue
+# PID를 확인한 뒤 필요한 경우:
+Get-Process -Id <PID>
+```
 
-| 파일명 | 증거 내용 |
-|---|---|
-| environment.png | Docker 및 Git 버전 |
-| docker-images.png | Docker 이미지 목록 |
-| docker-ps.png | 컨테이너 상태 |
-| flask-web.png | 웹브라우저 접속 화면 |
-| permission.png | chmod 변경 전후 |
-| bind-mount.png | 파일 변경 반영 |
-| volume-persistence.png | 데이터 영속성 검증 |
-| troubleshooting.png | 오류 및 해결 결과 |
+`<PID>`는 실제 숫자로 바꿉니다. Linux 호스트에서는 `ss -ltnp` 또는 `sudo lsof -i :8082`로 점유 상태를 확인할 수 있습니다.
 
-실제 생성한 스크린샷만 저장하며, 위 파일명은 권장 예시입니다.
+문제마다 **가설 → 확인 명령 → 원본 출력 → 조치 → 재검증** 순서로 기록합니다. 기존 오류 로그를 요약할 때도 원본 전체를 `evidence/`에 보관하고 아래처럼 상대 링크를 연결합니다.
 
----
+- [Docker 빌드 전체 로그](evidence/06-build-full.txt)
+- [HTTP 접속 결과](evidence/07-http-response.txt)
+- [Git 원격 저장소 확인](evidence/09-git-remote.txt)
+- [Git Push 결과](evidence/09-git-push.txt)
 
-## 18. 결론
+위 링크는 **파일을 실제로 생성·추가해야 유효**합니다.
 
-이번 실습을 통해 Docker 기반 웹 애플리케이션 실행환경을 구축하고 이미지 생성, 컨테이너 실행, 포트 매핑, 파일 권한 변경, 데이터 저장 및 영속성 관리 방법을 학습했습니다.
+## 12. 증거 수집 방법과 제출 체크리스트
 
-특히 바인드 마운트 실습에서는 Windows와 컨테이너 사이의 파일 변경 반영을 확인했으며, Docker Volume 실습에서는 컨테이너를 삭제해도 데이터가 유지된다는 사실을 직접 검증했습니다.
+프로젝트 루트에서 다음을 실행하여 실제 결과를 파일로 남길 수 있습니다.
 
-또한 포트 충돌과 컨테이너 즉시 종료 문제를 해결하면서 Docker 실행 오류를 분석하고 적절한 명령어로 문제를 해결하는 경험을 쌓았습니다.
+```powershell
+New-Item -ItemType Directory -Force .\evidence | Out-Null
+docker --version | Out-File .\evidence\03-docker-version.txt
+docker info | Out-File .\evidence\03-docker-info.txt
+docker run --rm hello-world 2>&1 | Out-File .\evidence\04-hello-world.txt
+docker images | Out-File .\evidence\05-images-containers.txt
+docker ps -a | Out-File .\evidence\05-container-list.txt
+curl.exe -i http://localhost:8082/ 2>&1 | Out-File .\evidence\07-http-response.txt
+git remote -v | Out-File .\evidence\09-git-remote.txt
+```
 
-향후 GitHub 저장소에 실습 파일과 증거자료를 업로드하고 Codyssey와 연동하여 프로젝트 결과를 관리할 예정입니다.
+실행하지 않은 명령의 성공 결과를 임의로 작성하지 않습니다. `docker build`, `git push`처럼 상태를 변경하는 작업은 준비와 권한을 확인한 후 직접 실행하고, 그 세션에서 출력을 저장합니다.
+
+| 평가 번호 | 필수 보완 사항 | 제출 확인 |
+|---|---|---|
+| 1 | 디렉터리 생성·이동·삭제 출력/캡처 | [ ] |
+| 2 | `chmod 755` 선택 이유 | [x] 설명 작성 / [ ] 증거 확인 |
+| 3 | Docker 데몬 정보 | [ ] |
+| 4 | `hello-world` 실행 출력 | [ ] |
+| 5 | 이미지·컨테이너 정리 로그 | [ ] |
+| 6 | 전체 이미지 빌드 로그 | [ ] |
+| 7 | 브라우저 또는 `curl` 접속 증거 | [ ] |
+| 8 | 볼륨 백업·복구 원칙 | [x] |
+| 9 | `git remote -v`와 Push 성공 로그 | [ ] |
+| 10 | 디렉터리 설계 근거 | [x] |
+| 11 | 재현 전 포트·환경 점검 | [x] |
+| 12 | 이미지와 컨테이너 개념 비교 | [x] |
+| 13 | 네트워크 네임스페이스 설명 | [x] |
+| 14 | 절대·상대경로 사용 규칙 | [x] |
+| 15 | 권한 숫자와 특수 비트 | [x] |
+| 16 | 호스트 포트 점유 확인 | [x] |
+| 17 | 볼륨 백업 운영 원칙 | [x] |
+| 18 | 오류 원본 로그와 증거 링크 | [ ] |
+
+> **최종 제출 전:** `[ ]` 항목을 실제 실행 로그·스크린샷·GitHub 링크로 채우고, `evidence/` 파일이 존재하는지 확인하세요. 특히 FAIL 판정 항목은 설명만으로는 재평가에서 통과하지 못할 수 있습니다.
