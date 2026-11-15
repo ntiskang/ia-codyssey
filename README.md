@@ -813,6 +813,7 @@ docker inspect volume-test --format '{{json .Mounts}}'
 ```powershell
 docker exec volume-test sh -c "echo Persistent-Docker-Volume-Data > /data/result.txt"
 ```
+실행 중인 volume-test 컨테이너 내부에서 result.txt 파일을 생성하고, 문자열을 저장
 
 ### 13.8 저장된 파일 내용 확인
 
