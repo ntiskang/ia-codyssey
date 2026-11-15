@@ -783,6 +783,7 @@ docker volume inspect assignment-volume
 ```powershell
 docker run -d --name volume-test --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
 ```
+Ubuntu 이미지를 이용해 volume-test라는 컨테이너를 백그라운드에서 실행하고, Docker 볼륨 assignment-volume을 컨테이너 내부의 /data 디렉터리에 연결
 
 실행 결과:
 
