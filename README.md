@@ -870,6 +870,7 @@ local     assignment-volume
 ```powershell
 docker run -d --name volume-test-new --mount type=volume,source=assignment-volume,target=/data ubuntu sleep infinity
 ```
+기존 Docker 볼륨 assignment-volume을 새로운 Ubuntu 컨테이너 volume-test-new에 연결하여 백그라운드에서 실행
 
 ### 13.13 기존 데이터 확인
 
