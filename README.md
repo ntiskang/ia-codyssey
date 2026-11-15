@@ -992,6 +992,49 @@ test-keep   Up 2 minutes
 
 ---
 
+## 15. Git/GitHub 버전관리
+
+본 Repository는 GitHub와 Codyssey 연동 및 실습 결과 관리를 위해 사용합니다.
+
+### 15.1 Git 저장소 초기화
+
+```powershell
+git init
+```
+
+### 15.2 파일 추가
+
+```powershell
+git add .
+```
+
+### 15.3 커밋 생성
+
+```powershell
+git commit -m "Add Docker mission files and documentation"
+```
+
+### 15.4 GitHub 원격 저장소 연결
+
+```powershell
+git remote add origin http://github.com/ntiskang/od-codessey.git
+```
+```powershell
+git remote -v
+```
+### 실행결과
+```powershell
+origin  http://github.com/ntiskang/od-codessey.git (fetch)
+origin  http://github.com/ntiskang/od-codessey.git (push)
+```
+### 15.5 GitHub에 업로드
+
+```powershell
+git branch -M main
+git push -u origin main
+```
+
+---
 ## 15. 실습 결과 요약
 
 | 실습 항목 | 수행 내용 | 결과 |
@@ -1008,53 +1051,9 @@ test-keep   Up 2 minutes
 | 바인드 마운트 | 호스트·컨테이너 파일 변경 공유 | 검증 완료 |
 | Docker Volume | 컨테이너 삭제 후 데이터 유지 | 검증 완료 |
 | 트러블슈팅 | 포트 충돌, 컨테이너 종료 문제 | 2건 해결 |
-| Git/GitHub | 버전 확인 | Commit/Push 증거 추가 필요 |
+| Git/GitHub | 버전 확인 | init/Commit/Push  |
 
 ---
-
-## 16. Git/GitHub 버전관리
-
-본 Repository는 GitHub와 Codyssey 연동 및 실습 결과 관리를 위해 사용합니다.
-
-### 16.1 Git 저장소 초기화
-
-```powershell
-git init
-```
-
-### 16.2 파일 추가
-
-```powershell
-git add .
-```
-
-### 16.3 커밋 생성
-
-```powershell
-git commit -m "Add Docker mission files and documentation"
-```
-
-### 16.4 GitHub 원격 저장소 연결
-
-```powershell
-git remote add origin <REPOSITORY_URL>
-```
-
-`<REPOSITORY_URL>`은 실제 GitHub 저장소 주소로 변경합니다.
-
-### 16.5 GitHub에 업로드
-
-```powershell
-git branch -M main
-git push -u origin main
-```
-
-이미 GitHub 저장소에 기존 커밋이 있는 경우에는 먼저 원격 저장소 이력을 확인하고 통합해야 할 수 있습니다.
-
-위 명령어는 향후 수행할 Git/GitHub 작업 절차이며, 실제 실행 완료 여부는 아직 확인되지 않았습니다.
-
----
-
 ## 17. 실습 증거자료 관리
 
 실습 결과를 `evidence/` 디렉터리에 저장합니다.
@@ -1063,17 +1062,13 @@ git push -u origin main
 
 | 파일명 | 증거 내용 |
 |---|---|
-| environment.png | Docker 및 Git 버전 |
-| docker-images.png | Docker 이미지 목록 |
-| docker-ps.png | 컨테이너 상태 |
-| flask-web.png | 웹브라우저 접속 화면 |
-| permission.png | chmod 변경 전후 |
-| bind-mount.png | 파일 변경 반영 |
-| volume-persistence.png | 데이터 영속성 검증 |
-| troubleshooting.png | 오류 및 해결 결과 |
+| localhost8082.png | 포트 매핑 수정 후 실행화면|
+| customer-image-container.png | customer image 생성 후 실행화면|
+| customer-image.png | 커스텀 이미지 생성|
+| attach-test.png | attach 실습 화면 |
+| exec-test.png | exec 실습 화면|
 
-실제 생성한 스크린샷만 저장하며, 위 파일명은 권장 예시입니다.
-
+Powershell에서 확인 가능한 텍스트는 본문에 삽입하였음.
 ---
 
 ## 18. 결론
